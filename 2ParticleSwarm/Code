@@ -1,0 +1,70 @@
+import random
+import numpy as np
+
+def traffic_cost_function(x):
+    arrival_rate_a = 15.0
+    arrival_rate_b = 22.0
+    
+    green_a, green_b = x[0], x[1]
+    
+    if green_a < 10 or green_a > 120 or green_b < 10 or green_b > 120:
+        return float('inf')
+    
+    wait_a = arrival_rate_a / (max(1.0, green_a / (green_a + green_b)))
+    wait_b = arrival_rate_b / (max(1.0, green_b / (green_a + green_b)))
+    
+    total_waiting_time = wait_a + wait_b
+    return total_waiting_time
+
+class Particle:
+    def __init__(self, bounds):
+        self.position = np.array([random.uniform(b[0], b[1]) for b in bounds])
+        self.velocity = np.array([random.uniform(-1.0, 1.0) for b in bounds])
+        self.best_position = np.copy(self.position)
+        self.best_score = float('inf')
+        self.score = float('inf')
+
+def pso_traffic_management(objective_func, bounds, num_particles=30, max_iter=50, w=0.5, c1=1.5, c2=1.5):
+    swarm = [Particle(bounds) for _ in range(num_particles)]
+    global_best_position = np.copy(swarm[0].position)
+    global_best_score = float('inf')
+    
+    for iteration in range(max_iter):
+        for particle in swarm:
+            particle.score = objective_func(particle.position)
+            
+            if particle.score < particle.best_score:
+                particle.best_score = particle.score
+                particle.best_position = np.copy(particle.position)
+                
+            if particle.score < global_best_score:
+                global_best_score = particle.score
+                global_best_position = np.copy(particle.position)
+                
+        for particle in swarm:
+            r1, r2 = random.random(), random.random()
+            cognitive_velocity = c1 * r1 * (particle.best_position - particle.position)
+            social_velocity = c2 * r2 * (global_best_position - particle.position)
+            
+            particle.velocity = w * particle.velocity + cognitive_velocity + social_velocity
+            particle.position += particle.velocity
+            
+            for i, b in enumerate(bounds):
+                particle.position[i] = np.clip(particle.position[i], b[0], b[1])
+                
+    return global_best_position, global_best_score
+
+if __name__ == "__main__":
+    traffic_bounds = [(10.0, 120.0), (10.0, 120.0)]
+    
+    best_green_times, minimum_wait_time = pso_traffic_management(
+        traffic_cost_function, 
+        traffic_bounds, 
+        num_particles=20, 
+        max_iter=30
+    )
+    
+    print("--- Optimal Traffic Signal Settings Found ---")
+    print(f"Optimal Green Light for Road A: {best_green_times[0]:.2f} seconds")
+    print(f"Optimal Green Light for Road B: {best_green_times[1]:.2f} seconds")
+    print(f"Estimated Minimum Average Waiting Time: {minimum_wait_time:.2f} units")
