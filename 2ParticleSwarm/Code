@@ -4,14 +4,18 @@ import numpy as np
 def traffic_cost_function(x):
     arrival_rate_a = 15.0
     arrival_rate_b = 22.0
-    
     green_a, green_b = x[0], x[1]
     
     if green_a < 10 or green_a > 120 or green_b < 10 or green_b > 120:
         return float('inf')
     
-    wait_a = arrival_rate_a / (max(1.0, green_a / (green_a + green_b)))
-    wait_b = arrival_rate_b / (max(1.0, green_b / (green_a + green_b)))
+
+    ratio_a = green_a / (green_a + green_b)
+    ratio_b = green_b / (green_a + green_b)
+    
+
+    wait_a = arrival_rate_a / max(0.01, ratio_a)
+    wait_b = arrival_rate_b / max(0.01, ratio_b)
     
     total_waiting_time = wait_a + wait_b
     return total_waiting_time
@@ -56,12 +60,8 @@ def pso_traffic_management(objective_func, bounds, num_particles=30, max_iter=50
 
 if __name__ == "__main__":
     traffic_bounds = [(10.0, 120.0), (10.0, 120.0)]
-    
     best_green_times, minimum_wait_time = pso_traffic_management(
-        traffic_cost_function, 
-        traffic_bounds, 
-        num_particles=20, 
-        max_iter=30
+        traffic_cost_function, traffic_bounds, num_particles=20, max_iter=30
     )
     
     print("--- Optimal Traffic Signal Settings Found ---")
