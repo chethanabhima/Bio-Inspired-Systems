@@ -1,1 +1,97 @@
+import random
+
+houses = [
+    {"id": 1, "rent": 15000, "distance": 5, "rooms": 2},
+    {"id": 2, "rent": 12000, "distance": 8, "rooms": 2},
+    {"id": 3, "rent": 18000, "distance": 3, "rooms": 3},
+    {"id": 4, "rent": 10000, "distance": 10, "rooms": 1},
+    {"id": 5, "rent": 14000, "distance": 4, "rooms": 2}
+]
+
+print("GENETIC ALGORITHM - HOUSE RENT APPLICATION\n")
+
+print("Available Houses:")
+
+for house in houses:
+    print("House", house["id"],
+          ": Rent = ₹{:,.0f}, Distance = {} km, Rooms = {}".format(
+              house["rent"],
+              house["distance"],
+              house["rooms"]
+          ))
+
+print("\nRunning Genetic Algorithm...\n")
+
+
+def fitness(house):
+    """
+    Fitness is based on:
+    - Affordable rent
+    - Short distance
+    - Number of rooms
+    """
+
+    rent_score = (20000 - house["rent"]) / 10000
+    distance_score = (10 - house["distance"]) / 10
+    room_score = house["rooms"] / 3
+
+    score = (
+        0.40 * rent_score +
+        0.30 * distance_score +
+        0.30 * room_score
+    )
+
+    return score
+
+
+population = [1, 2, 3, 4, 5]
+
+random.seed(42)
+
+
+for generation in range(1, 6):
+
+    population.sort(
+        key=lambda x: fitness(houses[x - 1]),
+        reverse=True
+    )
+
+    best_house = houses[population[0] - 1]
+
+    parent1 = population[0]
+    parent2 = population[1]
+
+    child = random.choice([parent1, parent2])
+
+    if random.random() < 0.1:
+        child = random.choice(population)
+
+    population.append(child)
+
+    population.sort(
+        key=lambda x: fitness(houses[x - 1]),
+        reverse=True
+    )
+    population = population[:5]
+
+    print(
+        "Generation {}: Best Fitness = {:.2f}".format(
+            generation,
+            fitness(houses[population[0] - 1])
+        )
+    )
+
+
+best_house = houses[population[0] - 1]
+
+print("\nOptimal House Found:")
+print("House:", best_house["id"])
+print("Rent: ₹{:,.0f} per month".format(best_house["rent"]))
+print("Distance:", best_house["distance"], "km")
+print("Rooms:", best_house["rooms"])
+
+print("Fitness Score: {:.2f}".format(fitness(best_house)))
+
+print("\nTherefore, House", best_house["id"],
+      "is the best house.")
 
