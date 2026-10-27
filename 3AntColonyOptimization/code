@@ -1,0 +1,74 @@
+import random
+
+dist = [
+    [0, 10, 15, 20],
+    [10, 0, 35, 25],
+    [15, 35, 0, 30],
+    [20, 25, 30, 0]
+]
+
+N = 5          
+T = 20        
+rho = 0.5      
+Q = 100        
+n = len(dist)
+
+pheromone = [[1.0] * n for _ in range(n)]
+
+best_path = None
+best_cost = float('inf')
+
+for iteration in range(T):
+    paths = []
+
+    for ant in range(N):
+        path = [0]
+        unvisited = list(range(1, n))
+
+        while unvisited:
+            current = path[-1]
+
+            probabilities = [
+                pheromone[current][city] / dist[current][city]
+                for city in unvisited
+            ]
+
+            next_city = random.choices(
+                unvisited, weights=probabilities
+            )[0]
+
+            path.append(next_city)
+            unvisited.remove(next_city)
+
+        path.append(0)  
+
+        cost = sum(
+            dist[path[i]][path[i + 1]]
+            for i in range(n)
+        )
+
+        paths.append((path, cost))
+
+        if cost < best_cost:
+            best_cost = cost
+            best_path = path[:]
+
+    for i in range(n):
+        for j in range(n):
+            pheromone[i][j] *= (1 - rho)
+
+    for path, cost in paths:
+        deposit = Q / (1 + cost)
+
+        for i in range(n):
+            a = path[i]
+            b = path[i + 1]
+
+            pheromone[a][b] += deposit
+            pheromone[b][a] += deposit
+
+    print("Iteration", iteration + 1,
+          "Best Distance:", best_cost)
+
+print("\nOptimal Path Found:", best_path)
+print("Minimum Distance:", best_cost)
